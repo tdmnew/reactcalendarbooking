@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Calender from './Calender';
+import Calendar from './Calendar';
 import { getDateProps } from '../../utils/date'; 
 
 class Dashboard extends Component {
@@ -62,10 +62,10 @@ class Dashboard extends Component {
 					  "June", "July", "August", "September", "October", 
 					  "November", "December"]
 
-		const calender = 
+		const calendar = 
 			<div id="dashboard">
 				<h1>{months[this.state.month - 1]} {this.state.year}</h1>
-				<Calender 
+				<Calendar 
 				start={this.state.start} 
 				end={this.state.end} 
 				year={this.state.year} 
@@ -74,7 +74,7 @@ class Dashboard extends Component {
 			  <button type="button" className="btn btn-primary btn-sm" onClick={this.renderNextMonth}>Next</button>
 			</div>
 
-		return ( calender )
+		return ( calendar )
   };
 }
 
