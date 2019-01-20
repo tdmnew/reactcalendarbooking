@@ -1,32 +1,52 @@
-.App {
-  text-align: center;
+/* Globals */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
 }
 
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 40vmin;
+ul {
+  padding: 0px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+/* Calender */
+
+#dashboard {
+    max-width: 500px;
 }
 
-.App-link {
-  color: #61dafb;
+tr, th{
+   width: 50px;
+   height: 50px;
+   cursor: default;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+td {
+  border: solid 0.2px;
+  height: 30px;
+  width: 35px;
+}
+
+/* Calender - Mobile */
+
+@media (max-width: 1000px) {
+  #dashboard {
+    top: 5px;
+    padding: 0px 0px 0px 0px;
+    float: center;
   }
-  to {
-    transform: rotate(360deg);
+}
+
+@media (max-width: 400px) {
+
+#mobileLayout, #appContainer, #calender, #habitsPanel {
+	padding: 0px;
+}
+
+  tr, th {
+     width: 5px;
+     height: 10px;
   }
 }
+
