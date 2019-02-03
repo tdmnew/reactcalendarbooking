@@ -4,6 +4,7 @@ const cors = require('cors');
 
 // Load Request Model
 const Request = require('../../models/Request');
+const Reservation = require('../../models/Reservation');
 
 const corsOptions = {
 	origin: 'http://localhost:5000'
@@ -29,7 +30,7 @@ router.post('/addrequest', (req, res) => {
 	
 	console.log(dateFields.dates)
 
-	Request.findOne({dates: { $in:dateFields.dates} })
+	Reservation.findOne({dates: { $in:dateFields.dates} })
 	.then(date => { 
 		if(date) { 
 			return res.status(400).json({error: "Date already exists"}) 
@@ -41,6 +42,26 @@ router.post('/addrequest', (req, res) => {
 	})
 	.catch(err => res.send(err))
 });
+
+
+// @route delete api/request/deleterequest
+// @desc Request Route
+// @access Private 
+router.delete('/deleterequest', (req, res) => {
+	Request.deleteOne({name: req.body.name})
+	.then( res => {
+		if(res) {
+			res.send("Request deletion successfull")
+		} else {
+			return res.status(400).json({error: "Deletion has failed"})
+		}
+	})
+	.catch( err => {
+		res.send(err)
+	})
+
+})
+
 
 // @route GET api/request/current
 // @desc Return current requests 

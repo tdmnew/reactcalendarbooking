@@ -36,6 +36,11 @@ class Calender extends Component {
 	
 	render(){
 
+	const dateObjStyle = {
+		backgroundColor: "red"
+	}
+
+
 	//If the day of the week falls on the first day of the month, create a Date
     // object, otherwise create an empty table data object
     var tableRow = [];
@@ -77,10 +82,10 @@ class Calender extends Component {
 			if(isThisMonth && counter === todaysDate) {
 				dayToday = true;
 			} else {
-				dayToday = false
+				dayToday = false;
 			}
 
-			//Check if date unavailable
+			//Check if date is in the past 
 			var available = true;
 			var todaysDateEpoch = Math.floor ( new Date() / 1000 )
 			var currentDateEpoch = Math.floor ( date / 1000 )
@@ -89,7 +94,15 @@ class Calender extends Component {
 				available = false;
 			}
 
+			//Check if date has already been reserved.
+			let reservations = this.props.reservations
+			if(reservations !== null && reservations.includes(dateISO)) {
+				available = false;
+			}
+
+
 			tableRow.push(<DateObj
+			style={dateObjStyle}
 			key={i} 
 			date={date} 
 			day={counter}
@@ -108,8 +121,8 @@ class Calender extends Component {
     };
     
 	return (
-    <div id="calender" className="container-fluid">
-      <table className="table" id="calender">
+    <div className="container-fluid">
+      <table className="booking-form--dashboard--calender">
         <thead>
             <tr id="daysOfWeek">
               <th>M</th>

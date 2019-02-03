@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
+import ToolTip from './tooltip';
 
 class DateObj extends Component {
 
 	constructor() {
 		super()
-		this.selfClicked = this.selfClicked.bind(this)
+		this.state = {
+			hover: false
+		}
 	}
 
     static defaultProps = {
@@ -15,6 +18,17 @@ class DateObj extends Component {
 		selected: false
     }
 
+	handleMouseIn(e) {
+		this.setState({
+			hover: true
+		})
+	}
+
+	handleMouseOut(e) {
+		this.setState({
+			hover: false
+		})
+	}
 
 	selfClicked(e) {
 		this.props.dateClicked(e, this.props.date)
@@ -32,21 +46,43 @@ class DateObj extends Component {
 	}
 	var styleUnavailable = {
 		backgroundColor: "grey",
-		color: "black",
-		opacity: "0.7"
+		color: "black"
 	}
+
+
+	const tooltip = <ToolTip hover={this.state.hover} available={this.props.available}/>
 
     if(this.props.dayToday) { //Highlight if TD, activities complete ot not 
       return(
-        <td onClick={this.selfClicked} style={this.props.selected ? styleClicked : styleDT}>{this.props.day}</td>
+        <td 
+		  style={this.props.selected ? styleClicked : styleDT}
+		  onClick={this.selfClicked.bind(this)} 
+		  onMouseOver={this.handleMouseIn.bind(this)} 
+		  onMouseOut={this.handleMouseOut.bind(this)}>
+		  {this.props.day}
+		  {tooltip}
+		</td>
       )
 	} else if(this.props.available === false) {
 		return (
-		<td style={styleUnavailable}>{this.props.day}</td>
+		<td 
+			style={styleUnavailable}
+			onMouseOver={this.handleMouseIn.bind(this)} 
+			onMouseOut={this.handleMouseOut.bind(this)}>
+			{this.props.day}
+			{tooltip}
+		</td>
 		)
     } else { 
       return(
-        <td style={this.props.selected ? styleClicked : null} onClick={this.selfClicked}>{this.props.day}</td>
+        <td 
+		  style={this.props.selected ? styleClicked : null} 
+		  onClick={this.selfClicked.bind(this)}
+		  onMouseOver={this.handleMouseIn.bind(this)} 
+		  onMouseOut={this.handleMouseOut.bind(this)}>
+		  {this.props.day}
+		  {tooltip}
+		</td>
       )
     }
   }

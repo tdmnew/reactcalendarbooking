@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Calendar from './Calendar';
 import { getDateProps } from '../../utils/date'; 
 import axios from 'axios';
+import Form from './Form';
 
 class Dashboard extends Component {
     constructor(){
@@ -18,14 +19,23 @@ class Dashboard extends Component {
 				email: null,
 				phone: null
 			},
-			error: false
+			reservations: null,
+			error: false,
+			successful: false
 		}
 
 		this.handleForm = this.handleForm.bind(this);
 		this.submit = this.submit.bind(this);
+		this.parseReserved = this.parseReserved.bind(this);
         this.renderNextMonth = this.renderNextMonth.bind(this);
         this.renderPreviousMonth = this.renderPreviousMonth.bind(this);
     }  
+
+
+	async componentDidMount() {
+		let reserved = await axios.get('/api/reservation/current/') 
+		this.parseReserved(reserved.data)
+	}
 
 	// dates provided by calender
 	updateDates = (dates) => {
@@ -34,10 +44,19 @@ class Dashboard extends Component {
 		})
 	}
 
+	parseReserved = (reserved) => {
+		const parsedReservations = reserved.map( i => {
+			return(i.date)
+		})
+		
+		this.setState({
+			reservations: parsedReservations
+		})
+	}
+
 
 	handleForm(e) {
 		e.preventDefault()
-		
 		switch(e.target.name) {
 			case "name":
 					this.setState({
@@ -86,16 +105,18 @@ class Dashboard extends Component {
 				error: true
 			})
 		} else { 
-			if(this.state.error === true) {
-				this.setState({
-					error: false
-				})
-			}
-			setTimeout( () => { 
+			//Prevent multiple submissions
+			if(this.state.successful === false) {
 				axios.post('/api/request/addrequest', request)
-				.then( res => console.log(res) )
-				console.log(request)
-			}, 1000)
+				.then( res => {
+					console.log(res)
+					this.setState({ successful: true})
+					if(this.state.error) {
+						this.setState({ error: false})
+					}
+				})
+				.catch( err => console.log(err) )
+			}
 		}
 	}
 
@@ -145,42 +166,29 @@ class Dashboard extends Component {
 					  "November", "December"]
 
 		const calendar = 
-			<div id="dashboard">
-				<h1>{months[this.state.month - 1]} {this.state.year}</h1>
+			<div className="booking-form--dashboard">
+				<h1 className="booking-form--dashboard__heading">{months[this.state.month - 1]} {this.state.year}</h1>
 				<Calendar 
 				start={this.state.start} 
 				end={this.state.end} 
 				year={this.state.year} 
 				month={this.state.month}
-				updateDates={this.updateDates}/>
-			  <button type="button" className="btn btn-primary btn-sm" onClick={this.renderPreviousMonth}>Previous</button>
-			  <button type="button" className="btn btn-primary btn-sm" onClick={this.renderNextMonth}>Next</button>
+				updateDates={this.updateDates}
+				reservations={this.state.reservations}/>
+				<div className="booking-form--dashboard--buttons">
+				  <button className="btn btn-calender" onClick={this.renderPreviousMonth}>Previous</button>
+				  <button className="btn btn-calender" onClick={this.renderNextMonth}>Next</button>
+				</div>
 			</div>
 
-
-		const forms = 
-			<div id="forms">
-			<form onSubmit={this.submit}>
-				<label>Name</label>
-				<br/>
-				<input type="text" className="form-control" onChange={this.handleForm} placeholder="Name" name="name"/>
-				<br/>
-				<label>Email address</label>
-				<br/>
-				<input type="email" className="form-control" onChange={this.handleForm} placeholder="name@example.com" name="email"/>
-				<br/>
-				<label>Phone Number</label>
-				<br/>
-				<input type="phone" className="form-control" onChange={this.handleForm} placeholder="Phone Number" name="phone"/>
-				<br/>
-				<button type="submit">Submit</button>
-				<br/>
-				{this.state.error ? "Please complete all of the fields above and select the dates to be booked" : null }
-				
-			</form>
-			</div>
-
-		return ( <div>{calendar} {forms}</div> )
+		return ( <div className="booking-form">
+					{calendar} 
+					<Form 
+					submit={this.submit} 
+					handleForm={this.handleForm} 
+					error={this.state.error}
+					successful={this.state.successful}/>
+				</div> )
   };
 }
 

@@ -10,10 +10,63 @@ ul {
   padding: 0px;
 }
 
+/* Form Fields */
+.form-fields {
+	width: 380px;
+	position: relative;
+	left: 50%;
+	transform: translateX(-50%);
+	padding-bottom: 20px;
+}
+
+.form-fields--form {
+	font-size: 16px;
+	width: 100%;
+	height: 20px;
+	border: 1px solid;
+	margin-bottom: 5px;
+	padding-left: 2px;
+}
+
+@media (max-width: 400px) {
+	.form-fields {
+		position: inherit;
+		width: 250px;
+	}
+}
+
+/* Booking Form */
+.booking-form {
+	max-width: 500px;
+	border-style: solid;
+	border-width: 0.1px;
+	position: relative;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.booking-form--dashboard__heading {
+	text-align: center;
+}
+
+
 /* Calender */
 
-#dashboard {
+.booking-form--dashboard {
     max-width: 500px;
+}
+
+.booking-form--dashboard--calender {
+	position: relative;
+	left: 50%;
+	transform: translateX(-50%)
+}
+
+.booking-form--dashboard--buttons {
+	width: 50%;
+	left: 25%;
+	position: relative;
+	transform: translateX(-25%);
 }
 
 tr, th{
@@ -30,18 +83,9 @@ td {
 }
 
 /* Calender - Mobile */
-
-@media (max-width: 1000px) {
-  #dashboard {
-    top: 5px;
-    padding: 0px 0px 0px 0px;
-    float: center;
-  }
-}
-
 @media (max-width: 400px) {
 
-#mobileLayout, #appContainer, #calender, #habitsPanel {
+.booking-form--dashboard--calender {
 	padding: 0px;
 }
 

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const ReservedSchema = new Schema({
+const ReserverationSchema = new Schema({
 		name: {
 			type: String
 		},
@@ -16,5 +16,5 @@ const ReservedSchema = new Schema({
 		}
 });
 
-module.exports = Reserved = mongoose.model('reserved', ReservedSchema);
+module.exports = Reserveration = mongoose.model('reservation', ReserverationSchema);
 

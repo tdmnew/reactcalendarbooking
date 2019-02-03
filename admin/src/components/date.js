@@ -1,26 +1,44 @@
 import React, { Component } from 'react';
+import ToolTip from './tooltip';
 
 class DateObj extends Component {
 
 	constructor() {
 		super()
-		this.selfClicked = this.selfClicked.bind(this)
+		this.state = {
+			hover: false,
+			reservedDateClicked: false
+		}
 	}
 
-    static defaultProps = {
+	static defaultProps = {
 		day: "",
 		date: null,
-		dayToday: false, // True passed in if it IS today's date
+		dayToday: false, 
 		available: true,
-		selected: false
+		selected: false,
+		reservation: null
     }
 
+	handleMouseIn(e) {
+		this.setState({
+			hover: true
+		})
+	}
+
+	handleMouseOut(e) {
+		this.setState({
+			hover: false
+		})
+	}
 
 	selfClicked(e) {
 		this.props.dateClicked(e, this.props.date)
 	}
 
   render(){
+
+	var reservation = this.props.reservation; 
 
 	var styleDT = {
 		backgroundColor:"black",
@@ -31,22 +49,48 @@ class DateObj extends Component {
 		color: "black"
 	}
 	var styleUnavailable = {
-		backgroundColor: "grey",
-		color: "black",
-		opacity: "0.7"
+		backgroundColor: reservation ? "purple" : "grey",
+		color: "black"
 	}
 
-    if(this.props.dayToday) { //Highlight if TD, activities complete ot not 
-      return(
-        <td onClick={this.selfClicked} style={this.props.selected ? styleClicked : styleDT}>{this.props.day}</td>
+
+	const tooltip = <ToolTip 
+	  				hover={this.state.hover} 
+	  				reservation={reservation !== null ? reservation : null}
+		  			available={this.props.available}/>
+
+    if(this.props.dayToday) { //Today's date
+		return(
+        <td 
+		  style={this.props.selected ? styleClicked : styleDT}
+		  onClick={this.selfClicked.bind(this)} 
+		  onMouseOver={this.handleMouseIn.bind(this)} 
+		  onMouseOut={this.handleMouseOut.bind(this)}>
+		  {this.props.day}
+		  {tooltip}
+		</td>
       )
-	} else if(this.props.available === false) {
+	} else if(this.props.available === false) { //Reserved/Unavailable
 		return (
-		<td style={styleUnavailable}>{this.props.day}</td>
+		<td 
+			style={this.props.selected ? styleClicked : styleUnavailable}
+			onClick={reservation !== null ? this.selfClicked.bind(this) : null}
+			onMouseOver={this.handleMouseIn.bind(this)} 
+			onMouseOut={this.handleMouseOut.bind(this)}>
+			{this.props.day}
+			{tooltip}
+		</td>
 		)
-    } else { 
+    } else { //Available
       return(
-        <td style={this.props.selected ? styleClicked : null} onClick={this.selfClicked}>{this.props.day}</td>
+        <td 
+		  style={this.props.selected ? styleClicked : null} 
+		  onClick={this.selfClicked.bind(this)}
+		  onMouseOver={this.handleMouseIn.bind(this)} 
+		  onMouseOut={this.handleMouseOut.bind(this)}>
+		  {this.props.day}
+		  {tooltip}
+		</td>
       )
     }
   }

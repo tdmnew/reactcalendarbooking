@@ -7,9 +7,40 @@ class Calender extends Component {
 	constructor() {
 		super() 
 		this.state = {
-			datesSelected: [] 
+			datesSelected: [],
+			datesReserved: [],
+			reservedDateSelected: false
 		}
 		this.handleDateClicked = this.handleDateClicked.bind(this)
+		this.addDateToArray = this.addDateToArray.bind(this)
+	}
+
+	componentDidMount() {
+			setTimeout( () => {
+				const datesReserved = this.props.reservations.map( i => {
+				return(i.date)
+			}) 
+			this.setState({datesReserved: datesReserved})
+			}, 1000)
+		}
+
+	addDateToArray(arr, newDate) {
+		if(arr.includes(newDate) === false) {
+			if(this.state.reservedDateSelected && this.state.datesReserved.includes(newDate)) {
+				arr.push(newDate)
+			} else if(this.state.reservedDateSelected === false && this.state.datesReserved.includes(newDate) === false) {
+				arr.push(newDate)
+			} else {
+			}
+		} else {
+			arr.splice( arr.indexOf(newDate) )
+		}
+		
+		this.setState({
+			datesSelected: arr
+		})
+
+
 	}
 
 	handleDateClicked(e, date) {
@@ -18,18 +49,21 @@ class Calender extends Component {
 		var originalArray = this.state.datesSelected
 
 		e.preventDefault()
-		if(originalArray.includes(newDate) === false) {
-			originalArray.push(newDate)
-			this.setState({
-				datesSelected: originalArray
-			})
-		} else {
-			originalArray.splice( originalArray.indexOf(newDate) )
 
-			this.setState({
-				datesSelected: originalArray
-			})
+		if(originalArray.length === 0) {
+			if(this.state.datesReserved.includes(newDate)) {
+				originalArray.push(newDate)
+				this.setState({reservedDateSelected: true, datesSeelected: originalArray})
+				this.props.reservedSelected(true)
+			} else {
+				originalArray.push(newDate)
+				this.setState({reservedDateSelected: false, datesSelected: originalArray}) 
+				this.props.reservedSelected(false)
+			}
+		} else {
+			this.addDateToArray(originalArray, newDate)
 		}
+		
 		//Pass dates up to Dashboard
 		this.props.updateDates(this.state.datesSelected)
 	}
@@ -62,9 +96,9 @@ class Calender extends Component {
 
         if(counter >= 1 && counter <= this.props.end) { //Populate with this month's dates
         
-			let date = new Date(this.props.year + "-" + this.props.month + "-" + counter)
-			let dateISO = date.toISOString().split("T")[0]
-			let dayToday;
+			var date = new Date(this.props.year + "-" + this.props.month + "-" + counter)
+			var dateISO = date.toISOString().split("T")[0]
+			var dayToday;
 			var selected = false;
 
 			//Check if date has been selected already.
@@ -80,7 +114,7 @@ class Calender extends Component {
 				dayToday = false
 			}
 
-			//Check if date unavailable
+			//Check if date is in the past 
 			var available = true;
 			var todaysDateEpoch = Math.floor ( new Date() / 1000 )
 			var currentDateEpoch = Math.floor ( date / 1000 )
@@ -88,6 +122,21 @@ class Calender extends Component {
 			if(currentDateEpoch < todaysDateEpoch) {
 				available = false;
 			}
+			
+
+			//Check if date is reserved - and populate with client info if available
+
+			let reservation = null;
+			if(this.props.reservations !== null) {
+				let reservations = this.props.reservations
+				for(let i = 0; i < reservations.length; i++) {
+					if(reservations[i].date === dateISO) {
+						reservation =  reservations[i] 
+						available = false
+					}
+				}
+			}	
+
 
 			tableRow.push(<DateObj
 			key={i} 
@@ -95,9 +144,11 @@ class Calender extends Component {
 			day={counter}
 			dayToday={dayToday}
 			selected={selected}
+			reservation={reservation}
 			available={available}
-			dateClicked={this.handleDateClicked}/>);
-
+			dateClicked={this.handleDateClicked}/>
+			);
+			
         counter++;
       } else if(counter > this.props.end) { //Start again, with the dates for the next month
         tableRow.push(<td key={i}></td>)
@@ -109,7 +160,7 @@ class Calender extends Component {
     
 	return (
     <div id="calender" className="container-fluid">
-      <table className="table" id="calender">
+      <table className="booking-form--dashboard--calender">
         <thead>
             <tr id="daysOfWeek">
               <th>M</th>

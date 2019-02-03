@@ -12,91 +12,136 @@ class Dashboard extends Component {
 			end: getDateProps().end,
 			month: getDateProps().month,
 			year: getDateProps().year,
+			datesReserved: [],
 			datesSelected: [],
-			contact: {
-				name: null,
-				email: null,
-				phone: null
-			},
-			error: false
+			requests: null,
+			reservations: null,
+			reservedSelected: null,
+			datesError: false
 		}
-
-		this.handleForm = this.handleForm.bind(this);
-		this.submit = this.submit.bind(this);
+		
+		this.logOff = this.logOff.bind(this);
+		this.markReserved = this.markReserved.bind(this);
+		this.removeReservation = this.removeReservation.bind(this);
+		this.parseRequests = this.parseRequests.bind(this);
+		this.setStateReserved = this.setStateReserved.bind(this);
+		this.handleRequest = this.handleRequest.bind(this);
         this.renderNextMonth = this.renderNextMonth.bind(this);
         this.renderPreviousMonth = this.renderPreviousMonth.bind(this);
     }  
+	
+	logOff(e) {
+		localStorage.clear()
+		window.location.assign("/")
+	}
+
+	async componentDidMount() {
+		let requests = await axios.get('/api/request/current')
+		let reserved = await axios.get('/api/reservation/current')
+		
+		this.parseRequests(requests.data)
+		this.setStateReserved(reserved.data)
+	}
+
+	markReserved(e) {
+		e.preventDefault()
+		let dates = { dates: this.state.datesSelected }
+		axios.post('/api/reservation/adddate', dates)
+		.then( res => { 
+			console.log(res)
+			window.location.assign("/")
+		})
+		.catch( err => console.log(err) )
+	}
+
+	removeReservation(e) {
+		e.preventDefault()
+		//Delete requests do not support a body, must use the {data :{}} field
+		if(window.confirm("Are you sure you want to remove these dates? This action cannot be undone")) {
+			axios.delete('/api/reservation/deletereservations', {data: {dates: this.state.datesSelected}})
+			.then( res => { 
+				console.log(res.data)
+				window.location.assign("/")
+			})
+			.catch( err => console.log(err) )
+		}
+	}
+
+	handleRequest(e, request) {
+		e.preventDefault()
+		if(e.target.name === "approve") {
+			const requestsArray = []
+			const dates = []
+			for(let i = 0; i < request.dates.length; i++) {
+				requestsArray.push({name: request.name, email:request.email,
+				phone: request.phone, date: request.dates[i]})
+				dates.push(request.dates[i])
+			}
+			const requestObject = {requests: requestsArray, dates: dates}
+			console.log(requestObject)
+			axios.post('/api/reservation/adddate', requestObject)
+			.then(res => {
+				axios.delete('/api/request/deleterequest', {data: {name: request.name}})
+				.then( res => {
+					window.location.assign("/")
+				})
+			})
+			.catch(err => {
+				this.setState({datesError: true})
+			})
+		} else if (e.target.name === "deny") {
+			if(window.confirm("Are you sure you want to deny this request? This action cannot be undone")) {
+				axios.delete('/api/request/deleterequest', {data: {name: request.name}})
+				.then( res => {
+					window.location.assign("/")
+				})
+			}
+		}
+	}
 
 	// dates provided by calender
 	updateDates = (dates) => {
 		this.setState({
-			datesSelected: dates
+			datesSelected: dates 
 		})
 	}
 
 
-	handleForm(e) {
-		e.preventDefault()
-		
-		switch(e.target.name) {
-			case "name":
-					this.setState({
-						contact: {
-							name: e.target.value,
-							email: this.state.contact.email,
-							phone: this.state.contact.phone,
-						}
-					})
-					break;
-			case "email":
-					this.setState({
-						contact: {
-							name: this.state.contact.name,
-							email: e.target.value,
-							phone: this.state.contact.phone
+	// Status if date was reseved provided by calender 
+	 reservedSelected = (reserved) => {
+		this.setState({
+			reservedSelected: reserved 
+		})
+	}
+	
 
-						}
-					})
-					break;
-			case "phone":
-					this.setState({
-						contact: {
-							name: this.state.contact.name,
-							email: this.state.contact.email,
-							phone: e.target.value 
-						}
-					})
-					break;
-			default:
-				console.log("Error")
-		}
+	parseRequests = (requests) => {
+		const parsedRequests = requests.map( i => {
+
+			let buttonApprove = <button name="approve" onClick={ (e) => this.handleRequest(e, i)}>Approve</button>
+			let buttonDeny = <button name="deny" onClick={ (e) => this.handleRequest(e, i)}>Deny</button>
+
+			let contact = <div>Email: {i.email}<br/>Phone: {i.phone}</div>
+			let dates = i.dates.map ( i => { return(<li key={i + "dates"}>{i}</li>) })
+			let request = <div><br/>{i.name} has requested the following dates: {dates} {contact} {buttonApprove} {buttonDeny}</div>
+			return(request)
+		})
+
+		this.setState({
+			requests: parsedRequests
+		})
 	}
 
+	setStateReserved = (reserved) => {
 
-	submit(e) {
-		e.preventDefault()
-		var request = {
-			name: this.state.contact.name,
-			email: this.state.contact.email,
-			phone: this.state.contact.phone,
-			dates: this.state.datesSelected
-		}
-		if(request.name == null || request.email == null || request.phone == null || request.dates.length === 0 ) {
-			this.setState({
-				error: true
-			})
-		} else { 
-			if(this.state.error === true) {
-				this.setState({
-					error: false
-				})
-			}
-			setTimeout( () => { 
-				axios.post('/api/request/addrequest', request)
-				.then( res => console.log(res) )
-				console.log(request)
-			}, 1000)
-		}
+		let reservedDates = reserved.map( i => {
+			return(i.date)
+		})
+
+		this.setState({
+			reservations: reserved,
+			datesReserved: reservedDates
+		})
 	}
 
 	renderPreviousMonth() {
@@ -145,43 +190,34 @@ class Dashboard extends Component {
 					  "November", "December"]
 
 		const calendar = 
-			<div id="dashboard">
-				<h1>{months[this.state.month - 1]} {this.state.year}</h1>
-				<Calendar 
-				start={this.state.start} 
-				end={this.state.end} 
-				year={this.state.year} 
-				month={this.state.month}
-				updateDates={this.updateDates}/>
-			  <button type="button" className="btn btn-primary btn-sm" onClick={this.renderPreviousMonth}>Previous</button>
-			  <button type="button" className="btn btn-primary btn-sm" onClick={this.renderNextMonth}>Next</button>
-			</div>
-
-
-		const forms = 
-			<div id="forms">
-			<form onSubmit={this.submit}>
-				<label>Name</label>
-				<br/>
-				<input type="text" className="form-control" onChange={this.handleForm} placeholder="Name" name="name"/>
-				<br/>
-				<label>Email address</label>
-				<br/>
-				<input type="email" className="form-control" onChange={this.handleForm} placeholder="name@example.com" name="email"/>
-				<br/>
-				<label>Phone Number</label>
-				<br/>
-				<input type="phone" className="form-control" onChange={this.handleForm} placeholder="Phone Number" name="phone"/>
-				<br/>
-				<button type="submit">Submit</button>
-				<br/>
-				{this.state.error ? "Please complete all of the fields above and select the dates to be booked" : null }
+				<div>
 				
-			</form>
-			</div>
+					<button className="btn--log-off" onClick={this.logOff}>Log Off</button>
+					<h1 className="booking-form--dashboard__heading">{months[this.state.month - 1]} {this.state.year}</h1>
+						<Calendar 
+						start={this.state.start} 
+						end={this.state.end} 
+						year={this.state.year} 
+						month={this.state.month}
+						reservedSelected={this.reservedSelected}
+						updateDates={this.updateDates}
+						reservations={this.state.reservations}/>
+			<div className="booking-form--dashboard--buttons">
+					<button type="button" className="btn btn-primary btn-sm" onClick={this.renderPreviousMonth}>Previous</button>
+					<button type="button" className="btn btn-primary btn-sm" onClick={this.renderNextMonth}>Next</button>
+					{ (this.state.datesSelected.length > 0 && this.state.reservedSelected === false) ?
+					 <button onClick={this.markReserved}>Mark Reserved</button> : null }
+					{ (this.state.datesSelected.length > 0 && this.state.reservedSelected === true) ?
+					 <button onClick={this.removeReservation}>Remove Reservation</button> : null }
+				</div>
+				</div>
 
-		return ( <div>{calendar} {forms}</div> )
-  };
+		const errorChecking = 
+					<div><br/>{ this.state.datesError ? "Approval failed (Have some or all of the dates in this request already been reserved?)" : null }</div>
+
+		
+		return ( <div className="booking-form">{calendar} <div className="booking-form--dashboard--requests">{this.state.requests}</div> {errorChecking} </div> )
+  }
 }
 
 export default Dashboard;
